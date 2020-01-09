@@ -1,5 +1,5 @@
 # Sense-Spectrum
- This is the code of our Sense Spectrum model.
+ This is the code of our Sense Spectrum model proposed in our paper "Dense Embeddings Preserving the Semantic Relationships in WordNet".
  One may download all the files and put them in one folder. 
  Then, under this folder, please create two folders named 'checkpoints' and 'SimLex_999_spectrum'. 
  Then under the folder 'SimLex_999_spectrum', please create two folders named 'noun' and 'verb'. 

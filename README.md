@@ -1,4 +1,25 @@
 # Sense-Spectrum
-These are the codes of our Sense Spectrum model proposed in our paper "Preserve the Hypernym Tree in WordNet by Dense Embeddings". One may download all the files and put them in one folder. Then, under this folder, please create a folder named 'checkpoints'. After that, running the sense_spectrum.py will give the sense spectra of noun and verb synsets in WordNet. This training will take about 20 hours, depending on the capacity of the GPU and CPU. After training, four files will be generated automatically: noun_synsets, noun_spectra, verb_synsets and verb_spectra. These files recording the synsets and their corresponding trained spectra.
- 
-Running the sense_spectrum_HIS will give the results on the SimLex-999 dataset from the HIS measurement as well as the three basic measurements in WordNet (please see our paper for detailed description). As described in our paper, we run all these four measurements on noun pairs, verb pairs and combining both noun and verb ones in the SimLex-999 dataset. To run on noun pairs, simply comment out the codes for verb pairs; And vise versa.
+These are the codes of the Sense Spectrum model proposed in our IJCNN 2022 paper [Dense Embeddings Preserving the Semantic Relationships in WordNet](https://ieeexplore.ieee.org/abstract/document/9892238) (In case one cannot have access to the official paper, the pre-print version is available [here](https://arxiv.org/pdf/2004.10863.pdf)).
+
+In this model, we provided low-dimensional dense embeddings for WordNet noun and verb synsets, where the hypernym-hyponym relationship between two synsets can be preserved in the embedding. Since our synset embedding operates like a spectrum, we call our embedding system Sense Spectrum. We have to specify that this model can only provide the spectra (embeddings) for **noun** and **verb** synsets in WordNet. At this moment, we are not able to embed adjective or adverb synsets, since there is no hypernym-hyponym relationship among them.
+
+To implement our model, one may follow these steps:
+
+1. Clone this repository via `git clone https://github.com/canlinzhang/Sense-Spectrum.git` to your local file.
+2. Train the sense spectrum for noun and verb synsets: `python train_sense_spectra.py`. Only CPU is required for the training. On a Macbook Pro with Apple M1 chip, it takes around 7 hours for training.
+3. Evaluate the Hypernym Intersection Similarity (HIS) measurement using the SimLex-999 dataset: `python evaluate_HIS_dist_on_SimLex-999.py`. The HIS measurement out-performs the traditional synset similarity measurements of WordNet by achieving higher correlation covariance score on the SimLex-999 noun and verb word pairs. One may read our [paper](https://arxiv.org/pdf/2004.10863.pdf) for more details.
+
+Finally, one can obtain the noun and verb spectrum for a given word. For example, we can obtain the noun and verb synset spectrum for the word 'dog' by implementing the following script:
+```
+from obtain_sense_spectra import ObtainSpectrum
+
+Class = ObtainSpectrum('synset_spactra/noun_synset_spectra.pickle', 'synset_spactra/verb_synset_spectra.pickle')
+
+noun_spec, verb_spec = Class.obtain_spectrum_for_word('dog')
+```
+
+Here, `noun_spec` is the average of the noun synset spectra related to 'dog'. To be specific, by evaluating `nltk wordnet`, we can see the noun synset related to 'dog' are `dog.n.01`, `frump.n.01`, `dog.n.03`, `cad.n.01`, `frank.n.02`, `pawl.n.01` and `andiron.n.01`. Then, the above script will obtain the spectrum for each of these synsets, average the obtained spectra dimension-wise, and then output the average spectra as `noun_spec`. The `verb_spec` is obtained similarly from the verb synsets related to 'dog', which is only `chase.v.01`.
+
+To cite our paper, please use:
+
+C. Zhang and X. Liu, "Dense Embeddings Preserving the Semantic Relationships in WordNet," 2022 International Joint Conference on Neural Networks (IJCNN), Padua, Italy, 2022, pp. 01-08, doi: 10.1109/IJCNN55064.2022.9892238.

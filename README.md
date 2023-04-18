@@ -12,13 +12,17 @@ To implement our model, one may follow these steps:
 Finally, one can obtain the noun and verb spectrum for a given word. For example, we can obtain the noun and verb synset spectrum for the word 'dog' by implementing the following script:
 ```
 from obtain_sense_spectra import ObtainSpectrum
-
 Class = ObtainSpectrum('synset_spactra/noun_synset_spectra.pickle', 'synset_spactra/verb_synset_spectra.pickle')
 
 noun_spec, verb_spec = Class.obtain_spectrum_for_word('dog')
 ```
 
 Here, `noun_spec` is the average of the noun synset spectra related to 'dog'. To be specific, by evaluating `nltk wordnet`, we can see the noun synset related to 'dog' are `dog.n.01`, `frump.n.01`, `dog.n.03`, `cad.n.01`, `frank.n.02`, `pawl.n.01` and `andiron.n.01`. Then, the above script will obtain the spectrum for each of these synsets, average the obtained spectra dimension-wise, and then output the average spectra as `noun_spec`. The `verb_spec` is obtained similarly from the verb synsets related to 'dog', which is only `chase.v.01`.
+
+Besides, if one already gets the synset (say, 'dog.n.01') and wants to obtain the corresponding spectrum, simply implement the same class as above and run
+```
+spec = Class.obtain_spectrum_for_synset('dog.n.01')
+```
 
 To cite our paper, please use:
 

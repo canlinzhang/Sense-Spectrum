@@ -64,7 +64,18 @@ class ObtainSpectrum:
             
         return(out_noun_spec, out_verb_spec)
     
-
+    def obtain_spectrum_for_synset(self, synset):
+    
+        synset_ = str(synset.name().split(" ")[0])
+    
+        if synset_ in self.noun_synset_dict:
+            return(self.noun_synset_dict[synset_][-1])
+            
+        elif synset_ in self.verb_synset_dict:
+            return(self.verb_synset_dict[synset_][-1])
+        
+        else:
+            return('synset does not exist, cannot provide spectrum.')
 
 
 

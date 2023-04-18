@@ -19,10 +19,13 @@ import zipfile
 import matplotlib.pyplot as plt
 import pylab as pl
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
 import nltk
 import datetime
 import re
+import pickle
 
 from nltk.corpus import wordnet as wn
 from scipy.stats import spearmanr
@@ -64,8 +67,11 @@ hypo = lambda s: s.hyponyms()
 noun_synset_list = []
 noun_word = []
 noun_synset_dict = {}
+inverse_noun_synset_dict = {}
 synset_index = 0
+
 for synset in list(wn.all_synsets('n')):
+    
     synset_ = str(synset.name().split(" ")[0])
     synset__ = synset_.split(".")
     word_ = synset__[0]
@@ -74,11 +80,14 @@ for synset in list(wn.all_synsets('n')):
     closure = [] #[closure]
     noun_synset.append(synset_)
     noun_synset_dict.update({synset_index:synset_})
+    inverse_noun_synset_dict.update({synset_:synset_index})
     synset_index += 1
+    
     closure.append(synset_)#append the synset itself, otherwise lost information
     for hyper_synset in list(synset.closure(hyper)):
         hyper_synset_ = str(hyper_synset.name().split(" ")[0])
         closure.append(hyper_synset_)
+    
     noun_synset.append(closure)
     noun_synset_list.append(noun_synset)
 noun_vocabulary_size += len(noun_synset_list)
@@ -94,7 +103,9 @@ print('duplicant noun words removed')
 verb_synset_list = []
 verb_word = []
 verb_synset_dict = {}
+inverse_verb_synset_dict = {}
 synset_index = 0
+
 for synset in list(wn.all_synsets('v')):
     synset_ = str(synset.name().split(" ")[0])
     synset__ = synset_.split(".")
@@ -104,11 +115,14 @@ for synset in list(wn.all_synsets('v')):
     closure = [] #[closure]
     verb_synset.append(synset_)
     verb_synset_dict.update({synset_index:synset_})
+    inverse_verb_synset_dict.update({synset_:synset_index})
     synset_index += 1
+    
     closure.append(synset_)#append the synset itself, otherwise lost information
     for hyper_synset in list(synset.closure(hyper)):
         hyper_synset_ = str(hyper_synset.name().split(" ")[0])
         closure.append(hyper_synset_)
+    
     verb_synset.append(closure)
     verb_synset_list.append(verb_synset)
 verb_vocabulary_size += len(verb_synset_list)
@@ -132,7 +146,7 @@ for i in range(len(noun_word)):
     for synset in list(wn.synsets(noun_word[i], pos=wn.NOUN)):
         synset_ = str(synset.name().split(" ")[0])
         temp_synonyms.append(synset_)
-        id_ = noun_synset_dict.keys()[noun_synset_dict.values().index(synset_)]
+        id_ = inverse_noun_synset_dict[synset_]
         temp_index.append(id_)
     if len(temp_index) > 1:
         word_synonyms.append(noun_word[i])
@@ -149,7 +163,7 @@ for i in range(len(noun_synset_list)):
     hypernym_index = []
     for hypernym in list(synset.hypernyms()):
         hypernym_ = str(hypernym.name().split(" ")[0])
-        id_ = noun_synset_dict.keys()[noun_synset_dict.values().index(hypernym_)]
+        id_ = inverse_noun_synset_dict[hypernym_]
         hypernym_list.append(hypernym_)
         hypernym_index.append(id_)
     noun_synset_list[i].append(hypernym_list)
@@ -169,7 +183,7 @@ for i in range(len(verb_word)):
     for synset in list(wn.synsets(verb_word[i], pos=wn.VERB)):
         synset_ = str(synset.name().split(" ")[0])
         temp_synonyms.append(synset_)
-        id_ = verb_synset_dict.keys()[verb_synset_dict.values().index(synset_)]
+        id_ = inverse_verb_synset_dict[synset_]
         temp_index.append(id_)
     if len(temp_index) > 1:
         word_synonyms.append(verb_word[i])
@@ -186,7 +200,7 @@ for i in range(len(verb_synset_list)):
     hypernym_index = []
     for hypernym in list(synset.hypernyms()):
         hypernym_ = str(hypernym.name().split(" ")[0])
-        id_ = verb_synset_dict.keys()[verb_synset_dict.values().index(hypernym_)]
+        id_ = inverse_verb_synset_dict[hypernym_]
         hypernym_list.append(hypernym_)
         hypernym_index.append(id_)
     verb_synset_list[i].append(hypernym_list)
@@ -348,8 +362,8 @@ conf.gpu_options.per_process_gpu_memory_fraction = 0.9
 with tf.Session(config=conf) as sess:    
     # Run the initializer.
     sess.run(init)
-    #saver.restore(sess, 'checkpoints/sense_spectrum/model.ckpt')
-    out_file = open("sense_spectrum_error", "wb")
+    #saver.restore(sess, 'checkpoints/model.ckpt')
+    out_file = open("checkpoints/sense_spectrum_logits", "w")
     log_writer = csv.writer(out_file, delimiter='\t', quotechar='|',  quoting=csv.QUOTE_MINIMAL)
 
  
@@ -413,7 +427,7 @@ with tf.Session(config=conf) as sess:
             log_writer.writerow(['noun_training', step, noun_error_])
 
         if step % save_step == 0:
-            saver_path = saver.save(sess, 'checkpoints/sense_spectrum/model.ckpt') 
+            saver_path = saver.save(sess, 'checkpoints/model.ckpt') 
             print('checkpoint saved')
 
 
@@ -474,61 +488,47 @@ with tf.Session(config=conf) as sess:
             log_writer.writerow(['verb_training', step, verb_error_])
 
         if step % save_step == 0:
-            saver_path = saver.save(sess, 'checkpoints/sense_spectrum/model.ckpt') 
+            saver_path = saver.save(sess, 'checkpoints/model.ckpt') 
             print('checkpoint saved')
     
 
-    ######output the synset##########################
-    noun_spectra_ = np.zeros((noun_vocabulary_size, noun_embedding_size))
+    ######append the spectra to the synset##########################
     for i in range(noun_vocabulary_size):
         holder_synset = []
         holder_synset.append(i)
         _synset_ = sess.run(noun_spectrum, feed_dict={noun_train_inputs_1: holder_synset})
         noun_synset_list[i].append(_synset_)
-        noun_spectra_[i,:] = _synset_
         if i % 1000 == 0:
-            print('outout noun spectra', i)
-    np.savetxt("noun_spectra_.txt", noun_spectra_)
+            print('append noun spectra', i)
 
-    verb_spectra_ = np.zeros((verb_vocabulary_size, verb_embedding_size))
     for i in range(verb_vocabulary_size):
         holder_synset = []
         holder_synset.append(i)
         _synset_ = sess.run(verb_spectrum, feed_dict={verb_train_inputs_1: holder_synset})
         verb_synset_list[i].append(_synset_)
-        verb_spectra_[i,:] = _synset_
         if i % 1000 == 0:
-            print('outout verb spectra', i)
-    np.savetxt("verb_spectra_.txt", verb_spectra_)
+            print('append verb spectra', i)
 
 
-####output the noun and verb synsets  (string)
-out_noun = open("noun_synset.txt", "w")
-for i in range(noun_vocabulary_size):
-    # write each synset to output file
-    out_noun.write(noun_synset_list[i][0])
-    out_noun.write("\n")
-out_noun.close()
+#the dictionary with synset as key and their infor as value
+out_noun_synset_dict, out_verb_synset_dict = dict(), dict()
 
-out_verb = open("verb_synset.txt", "w")
-for i in range(verb_vocabulary_size):
-    # write each synset to output file
-    out_verb.write(verb_synset_list[i][0])
-    out_verb.write("\n")
-out_verb.close()
+for i in range(len(noun_synset_list)):
+    key = noun_synset_list[i][0]
+    value = noun_synset_list[i][1:]
+    out_noun_synset_dict[key] = value
+    
+for i in range(len(verb_synset_list)):
+    key = verb_synset_list[i][0]
+    value = verb_synset_list[i][1:]
+    out_verb_synset_dict[key] = value
 
+####output the noun and verb synset list######
+with open('synset_spactra/noun_synset_spectra.pickle', 'wb') as handle:
+    pickle.dump(out_noun_synset_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-
-
-
-
-
-
-
-
-
-
-
+with open('synset_spactra/verb_synset_spectra.pickle', 'wb') as handle:
+    pickle.dump(out_verb_synset_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 

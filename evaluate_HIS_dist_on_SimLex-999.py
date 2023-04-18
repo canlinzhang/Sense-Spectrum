@@ -70,6 +70,7 @@ hypo = lambda s: s.hyponyms()
 noun_synset_list = []
 noun_word = []
 noun_synset_dict = {}
+inverse_noun_synset_dict = {}
 synset_index = 0
 for synset in list(wn.all_synsets('n')):
     synset_ = str(synset.name().split(" ")[0])
@@ -80,6 +81,7 @@ for synset in list(wn.all_synsets('n')):
     closure = [] #[closure]
     noun_synset.append(synset_)
     noun_synset_dict.update({synset_index:synset_})
+    inverse_noun_synset_dict.update({synset_:synset_index})
     synset_index += 1
     closure.append(synset_)#append the synset itself, otherwise lost information
     for hyper_synset in list(synset.closure(hyper)):
@@ -100,6 +102,7 @@ print('duplicant noun words removed')
 verb_synset_list = []
 verb_word = []
 verb_synset_dict = {}
+inverse_verb_synset_dict = {}
 synset_index = 0
 for synset in list(wn.all_synsets('v')):
     synset_ = str(synset.name().split(" ")[0])
@@ -110,6 +113,7 @@ for synset in list(wn.all_synsets('v')):
     closure = [] #[closure]
     verb_synset.append(synset_)
     verb_synset_dict.update({synset_index:synset_})
+    inverse_verb_synset_dict.update({synset_:synset_index})
     synset_index += 1
     closure.append(synset_)#append the synset itself, otherwise lost information
     for hyper_synset in list(synset.closure(hyper)):
@@ -177,8 +181,8 @@ for i in range(111,777):
         temp_list = []
         for i_1 in range(len(temp_list_1)):
             for i_2 in range(len(temp_list_2)):
-                id_1 = noun_synset_dict.keys()[noun_synset_dict.values().index(temp_list_1[i_1])]
-                id_2 = noun_synset_dict.keys()[noun_synset_dict.values().index(temp_list_2[i_2])]
+                id_1 = inverse_noun_synset_dict[temp_list_1[i_1]]
+                id_2 = inverse_noun_synset_dict[temp_list_2[i_2]]
                 list_1_ = noun_synset_list[id_1][1]
                 list_2_ = noun_synset_list[id_2][1]
                 cl_ = len(list(set(list_1_).intersection(list_2_)))
@@ -227,8 +231,8 @@ for i in range(777,999):
         temp_list = []
         for i_1 in range(len(temp_list_1)):
             for i_2 in range(len(temp_list_2)):
-                id_1 = verb_synset_dict.keys()[verb_synset_dict.values().index(temp_list_1[i_1])]
-                id_2 = verb_synset_dict.keys()[verb_synset_dict.values().index(temp_list_2[i_2])]
+                id_1 = inverse_verb_synset_dict[temp_list_1[i_1]]
+                id_2 = inverse_verb_synset_dict[temp_list_2[i_2]]
                 list_1_ = verb_synset_list[id_1][1]
                 list_2_ = verb_synset_list[id_2][1]
                 cl_ = len(list(set(list_1_).intersection(list_2_)))

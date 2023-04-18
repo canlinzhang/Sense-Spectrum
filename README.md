@@ -7,7 +7,7 @@ To implement our model, one may follow these steps:
 
 1. Clone this repository via `git clone https://github.com/canlinzhang/Sense-Spectrum.git` to your local file.
 
-2. Train the sense spectrum for noun and verb synsets: `python train_sense_spectra.py`. Only CPU is required for the training. On a Macbook Pro with Apple M1 chip, it takes around 7 hours for training. Also, one can directly download the trained noun and verb spectrum via [this link](https://drive.google.com/drive/folders/17FwCkN1YU-Peig3sqBG9FuU4HB9sT538). After downloading, please put the two pickle files into the `synset_spactra` folder.
+2. Train the sense spectrum for noun and verb synsets: `python train_sense_spectra.py`. Only CPU is required for the training. On a Macbook Pro with Apple M1 chip, it takes around 7 hours for training. Also, one can directly download the trained noun and verb spectra via [this link](https://drive.google.com/drive/folders/17FwCkN1YU-Peig3sqBG9FuU4HB9sT538). After downloading, please put the two pickle files into the `synset_spactra` folder.
 
 3. Evaluate the Hypernym Intersection Similarity (HIS) measurement using the SimLex-999 dataset: `python evaluate_HIS_dist_on_SimLex-999.py`. The HIS measurement out-performs the traditional synset similarity measurements of WordNet by achieving higher correlation covariance score on the SimLex-999 noun and verb word pairs. One may read our [paper](https://arxiv.org/pdf/2004.10863.pdf) for more details.
 
